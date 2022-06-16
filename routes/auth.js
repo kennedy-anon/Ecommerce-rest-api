@@ -2,6 +2,7 @@ const router = require("express").Router();
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
+const { MongoServerError } = require("mongodb")
 
 //Register
 router.post("/register", async (req, res)=>{
@@ -15,7 +16,14 @@ router.post("/register", async (req, res)=>{
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     }catch(err){
-        res.status(500).json(err);
+        //when email or username exists
+        if (err instanceof MongoServerError && err.code === 11000){
+            //console.log("oops looks like we have a duplicate");
+            res.status(409).json({msg: 'Username or email exists'});
+        }else{
+            console.log(err);
+            res.status(500).json(err);
+        }
     }
 });
 
