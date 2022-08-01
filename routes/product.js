@@ -2,16 +2,66 @@ const Product = require("../models/Product");
 const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require("./verifyToken");
 
 const router = require("express").Router();
+const multer = require("multer");
+
+var fs = require('fs');
+var path = require('path');
+
+
+//storage -for product images
+const storage  = multer.diskStorage({
+    destination: 'productImages',
+    filename: (req, file, cb) =>{
+        cb(null, Date.now() + '-' + file.originalname);
+        //console.log(file);
+    },
+});
+
+// Multer Filter //for filtering files that are not images
+const multerFilter = (req, file, cb) => {
+    var imagesEx = file.mimetype.split("/")[1];
+
+    if ((imagesEx === "png") || (imagesEx === "jpeg") || (imagesEx === "jpg")) {
+      cb(null, true);
+    } else {
+        //res.send("Not an image.");
+      cb(new Error("Not an image File!!"), false);
+    }
+  };
+
+const upload = multer({
+    storage: storage,
+    fileFilter: multerFilter,
+}).single('img')
+
 
 // Add new product
 router.post("/", verifyTokenAndAdmin, async (req, res)=>{
-    const newProduct = new Product(req.body);
-    try{
-        const savedProduct = await newProduct.save();
-        res.status(200).json(savedProduct);
-    }catch(err){
-        res.status(500).json(err);
-    }
+    upload(req, res, (err)=>{
+        if (err){
+            // browser set to allow only image files
+            //console.log(err); 
+            res.status(500).json("Not an Image File!!");
+        }else{
+            const newProduct = new Product({
+                title: req.body.title,
+                desc: req.body.desc,
+                img:{
+                    data: fs.readFileSync(path.join(__dirname, '..', 'productImages', req.file.filename)),
+                    //data: req.file.filename,
+                    contentType: 'image/png'
+                },
+                categories: req.body.categories,
+                size: req.body.size,
+                color: req.body.color,
+                price: req.body.price,
+                count: req.body.count
+            })
+
+            newProduct.save()
+            .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully")).catch(err=>res.status(500).json(err))
+        }
+    })
 });
 
 //update product details
