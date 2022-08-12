@@ -40,7 +40,6 @@ router.post("/", verifyTokenAndAdmin, async (req, res)=>{
     upload(req, res, (err)=>{
         if (err){
             // browser set to allow only image files
-            //console.log(err); 
             res.status(500).json("Not an Image File!!");
         }else{
             const newProduct = new Product({
@@ -59,7 +58,9 @@ router.post("/", verifyTokenAndAdmin, async (req, res)=>{
             })
 
             newProduct.save()
-            .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully")).catch(err=>res.status(500).json(err))
+            .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully")).catch((err)=>{
+                //console.log(err);
+                res.status(500).json(err)})
         }
     })
 });
