@@ -58,7 +58,7 @@ router.post("/", verifyTokenAndAdmin, async (req, res)=>{
             })
 
             newProduct.save()
-            .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully")).catch((err)=>{
+            .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully.")).catch((err)=>{
                 //console.log(err);
                 res.status(500).json(err)})
         }
