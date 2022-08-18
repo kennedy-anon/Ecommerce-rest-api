@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require("./verifyToken");
+const { MongoServerError } = require("mongodb")
 
 const router = require("express").Router();
 const multer = require("multer");
@@ -60,7 +61,17 @@ router.post("/", verifyTokenAndAdmin, async (req, res)=>{
             newProduct.save()
             .then((savedProduct)=>res.status(200).json(newProduct.title + " added successfully.")).catch((err)=>{
                 //console.log(err);
-                res.status(500).json(err)})
+                if (err instanceof MongoServerError && err.code === 11000){
+                    fs.unlink(path.join(__dirname, '..', 'productImages', req.file.filename), (err)=>{
+                        if (err){
+                            //console.log(err);
+                        }
+                    });
+                    res.status(409).json({msg: 'The product arleady exists in the database.'});
+                }else{
+                    res.status(500).json(err);
+                }
+                })
         }
     })
 });
