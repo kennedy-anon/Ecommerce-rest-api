@@ -80,15 +80,22 @@ router.post("/", verifyTokenAndAdmin, async (req, res)=>{
 router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
 
     try {
+        /* updating categories field
+        const updatedProduct = await Product.findByIdAndUpdate(req.params.id, {
+            $set: {
+                categories : req.body.categories
+            }
+        }, { new: true });
+        */
         const updatedProduct = await Product.findByIdAndUpdate(req.params.id, {
             $set: req.body,
         }, { new: true });
+
         res.status(200).json(updatedProduct);
     } catch (err) {
         res.status(500).json(err);
     }
 });
-
 
 //delete product
 router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
@@ -100,10 +107,22 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
     }
 })
 
-// get a product
-router.get("/find/:id", async (req, res) => {
+// get a product by id
+router.get("/findById/:id", async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
+        res.status(200).json(product);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+})
+
+// get a product by title
+router.get("/findByTitle/:title", async (req, res) => {
+    try {
+        const product = await Product.findOne({
+            title: req.params.title
+        });
         res.status(200).json(product);
     } catch (err) {
         res.status(500).json(err);
@@ -126,7 +145,7 @@ router.get("/", async (req, res) => {
         }else{
             products = await Product.find();
         }
-
+ 
         res.status(200).json(products);
     } catch (err) {
         res.status(500).json(err);
