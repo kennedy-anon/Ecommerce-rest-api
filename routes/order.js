@@ -44,7 +44,7 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
 // get product list for a particular order
 router.get("/productList/:id", verifyTokenAndAuthorization, async (req, res) => {
     try {
-        const orderId = req.body.orderId;
+        const orderId = req.query.orderId;
         const order = await Order.aggregate([
             //matching order with the given id
             { $match: {_id: mongoose.Types.ObjectId(orderId) } },
