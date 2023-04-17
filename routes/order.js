@@ -1,4 +1,6 @@
+const { default: mongoose } = require("mongoose");
 const Order = require("../models/Order");
+
 const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require("./verifyToken");
 
 const router = require("express").Router();
@@ -37,6 +39,46 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
         res.status(500).json(err);
     }
 })
+
+
+// get product list for a particular order
+router.get("/productList/:id", verifyTokenAndAuthorization, async (req, res) => {
+    try {
+        const orderId = req.body.orderId;
+        const order = await Order.aggregate([
+            //matching order with the given id
+            { $match: {_id: mongoose.Types.ObjectId(orderId) } },
+            { $unwind: '$products' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products.productId',
+                    foreignField: '_id',
+                    as: 'productDetails'
+                }
+            },
+            { $unwind: '$productDetails'},
+            {
+                $group: {
+                    _id: '$_id',
+                    products: {
+                        $push: {
+                            title: '$productDetails.title',
+                            quantity: '$products.quantity',
+                            price: '$productDetails.price',
+                            img: '$productDetails.img'
+                        }
+                    }
+                }
+            }
+        ]);
+
+        res.status(200).json(order)
+    } catch (err) {
+        res.status(500).json(err);
+    }
+})
+
 
 
 // get user Orders using userId ...passed param is userId
@@ -88,5 +130,27 @@ router.get("/income", verifyTokenAndAdmin, async (req, res) => {
         res.status(500).json(err);
     }
 })
+
+
+// script to update productID field to objectID ...to allow $lookup
+router.put('/updateProductId', verifyTokenAndAdmin, async (req, res) => {
+    try{
+        const orders = await Order.find({});
+        for (let i = 0; i < orders.length; i++) {
+            const order = orders[i];
+            for (let j = 0; j < order.products.length; j++) {
+                const product = order.products[j];
+                const productId = mongoose.Types.ObjectId(product.productId);
+                order.products[j].productId = productId;
+            }
+            await order.save();
+        }
+
+        res.send('Update Complete!');
+    } catch(err) {
+        res.status(500).send(err);
+    }
+})
+
 
 module.exports = router
