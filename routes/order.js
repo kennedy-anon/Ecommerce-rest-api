@@ -133,17 +133,18 @@ router.get("/income", verifyTokenAndAdmin, async (req, res) => {
 
 
 // script to update productID field to objectID ...to allow $lookup
-router.put('/updateProductId', verifyTokenAndAdmin, async (req, res) => {
+router.put('/updateProductId/:id', verifyTokenAndAdmin, async (req, res) => {
     try{
         const orders = await Order.find({});
-        for (let i = 0; i < orders.length; i++) {
-            const order = orders[i];
-            for (let j = 0; j < order.products.length; j++) {
-                const product = order.products[j];
-                const productId = mongoose.Types.ObjectId(product.productId);
-                order.products[j].productId = productId;
-            }
-            await order.save();
+
+        for (const order of orders) {
+        const updatedProducts = order.products.map(product => {
+            const productId = mongoose.Types.ObjectId(product.productId);
+            return { ...product, productId };
+        });
+
+        await Order.updateOne({ _id: order._id }, { $set: { products: updatedProducts } });
+        // console.log(`Order ${order._id} updated successfully.`);
         }
 
         res.send('Update Complete!');
