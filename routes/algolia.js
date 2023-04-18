@@ -25,10 +25,11 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
     const index = client.initIndex('dev_equickShop');
 
     for (let record in records) {
-      console.log(records[record]);
+      // console.log(records[record]);
       await index.saveObject(records[record]); // sending records to algolia
     }
 
+    /*
     // Search the index and return the results
     index
     .search('speaker')
@@ -36,6 +37,9 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
       let results = hits[0];
       res.status(200).json(results);
     })
+    */
+
+    res.status(200).json("Indexing completed successfully!");
 
   } catch (err) {
     res.status(500).json(err);
