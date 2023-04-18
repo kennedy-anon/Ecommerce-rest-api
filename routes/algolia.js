@@ -8,12 +8,14 @@ const Product = require("../models/Product");
 router.get("/", verifyTokenAndAdmin, async (req, res) => {
   try {
     // Fetch data from database
-    const products = await Product.find({}, { _id: 1, title: 1 });
+    const products = await Product.find({}, { _id: 1, title: 1, desc: 1, categories: 1 });
 
     // Map the products to Algolia objects
     const records = products.map(product => ({
       objectID: product._id.toString(), // Set the objectID to the _id value from MongoDB
-      title: product.title, // Other attributes of the product object
+      title: product.title,
+      desc: product.desc,
+      categories: product.categories // Other attributes of the product object
     }));
     
     // Connect and authenticate with equickShop Algolia app
@@ -23,7 +25,7 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
     const index = client.initIndex('dev_equickShop');
 
     for (let record in records) {
-      // console.log(records[record]);
+      console.log(records[record]);
       await index.saveObject(records[record]); // sending records to algolia
     }
 
