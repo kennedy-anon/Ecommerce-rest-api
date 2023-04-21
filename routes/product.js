@@ -137,13 +137,13 @@ router.get("/", async (req, res) => {
     try {
         let products;
         if (qNew){
-            products = await Product.find().sort({createdAt: -1}).limit(5);
+            products = await Product.find().sort({createdAt: -1}).limit(8);
         }else if(qCategory){
             products = await Product.find({categories:{
                 $in: [qCategory],
-            }});
+            }}).limit(16);
         }else{
-            products = await Product.find();
+            products = await Product.find().limit(16);;
         }
  
         res.status(200).json(products);
